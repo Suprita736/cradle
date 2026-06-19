@@ -49,5 +49,9 @@ cd cradle
 ```bash
 python -m http.server 8000
 ```
+Then visit
+```
+bash http://localhost:8000
+```
 4. For Individual projects
    - Open their `index.html` directly on browser 
