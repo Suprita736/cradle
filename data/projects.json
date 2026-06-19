@@ -2,41 +2,41 @@
   {
     "title": "Ai Circuit Builder",
     "category": "aiml",
-    "path": "projects/aiml/ai-circuit-builder"
+    "path": "projects/aiml/ai-circuit-builder/"
   },
   {
     "title": "Attendance Tracker",
     "category": "productivity",
-    "path": "projects/productivity/attendance-tracker"
+    "path": "projects/productivity/attendance-tracker/"
   },
   {
     "title": "Chess",
     "category": "games",
-    "path": "projects/games/chess"
+    "path": "projects/games/chess/"
   },
   {
     "title": "Cpu Emulator",
     "category": "dev-tools",
-    "path": "projects/dev-tools/cpu-emulator"
+    "path": "projects/dev-tools/cpu-emulator/"
   },
   {
     "title": "Dot Game",
     "category": "games",
-    "path": "projects/games/dot-game"
+    "path": "projects/games/dot-game/"
   },
   {
     "title": "Image Classifier",
     "category": "aiml",
-    "path": "projects/aiml/image-classifier"
+    "path": "projects/aiml/image-classifier/"
   },
   {
     "title": "Ludo Game",
     "category": "games",
-    "path": "projects/games/ludo-game"
+    "path": "projects/games/ludo-game/"
   },
   {
     "title": "Neural Network Playground",
     "category": "aiml",
-    "path": "projects/aiml/neural-network-playground"
+    "path": "projects/aiml/neural-network-playground/"
   }
 ]
