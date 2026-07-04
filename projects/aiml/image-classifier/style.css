@@ -459,3 +459,201 @@ button:hover {
         flex-direction: column;
     }
 }
+
+/* Custom Mode Styles */
+.mode-toggle {
+    display: flex;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    padding: 6px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+}
+
+.mode-btn {
+    flex: 1;
+    background: transparent;
+    box-shadow: none;
+    color: var(--text-secondary);
+    padding: 10px;
+    font-size: 14px;
+}
+
+.mode-btn:hover {
+    box-shadow: none;
+    transform: none;
+    color: var(--text);
+}
+
+.mode-btn.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.custom-controls {
+    margin-bottom: 20px;
+}
+
+.add-class-group {
+    display: flex;
+    gap: 10px;
+}
+
+.add-class-group input {
+    flex: 1;
+    padding: 12px 15px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text);
+    font-family: "Poppins", sans-serif;
+    outline: none;
+}
+
+.add-class-group input:focus {
+    border-color: var(--accent);
+}
+
+.add-class-group button {
+    flex: 0 0 auto;
+    padding: 12px 20px;
+}
+
+.classes-container {
+    max-height: 380px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding-right: 5px;
+}
+
+.classes-container::-webkit-scrollbar {
+    width: 6px;
+}
+.classes-container::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 20px;
+}
+
+.class-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 15px;
+}
+
+.class-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.class-title {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.class-count {
+    color: var(--accent-hover);
+    font-size: 13px;
+    font-weight: 700;
+    background: rgba(37, 99, 235, 0.15);
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-left: 10px;
+}
+
+.remove-class-btn {
+    background: transparent;
+    color: #ef4444;
+    box-shadow: none;
+    padding: 5px;
+    font-size: 18px;
+    flex: 0 0 auto;
+}
+.remove-class-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    transform: scale(1.1);
+    box-shadow: none;
+}
+
+.class-images {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+}
+
+.class-images::-webkit-scrollbar {
+    height: 6px;
+}
+.class-images::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 20px;
+}
+
+.thumb-wrapper {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.thumb-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.thumb-remove {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-size: 20px;
+}
+
+.thumb-wrapper:hover .thumb-remove {
+    opacity: 1;
+}
+
+.add-image-btn {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.02);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 24px;
+    color: var(--muted);
+    transition: var(--transition);
+}
+
+.add-image-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+button:disabled, .upload-btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
