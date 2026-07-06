@@ -21,42 +21,135 @@ function render() {
     const neededTotal = Math.ceil(targetDec * s.total);
     const neededFromRemaining = Math.max(0, neededTotal - s.p);
 
-    let goalStatus = '';
-    if (neededFromRemaining > remaining) {
-      goalStatus = `<span style="color:var(--danger)"><b>Impossible</b><br>Max possible: ${(((s.p + remaining) / s.total) * 100).toFixed(1)}%</span>`;
-    } else {
-      goalStatus = `Attend <b>${neededFromRemaining}</b> more<br><small>out of ${remaining} left</small>`;
-    }
+    // Create main row container
+    const tr = document.createElement('tr');
 
-    body.innerHTML += `
-            <tr>
-                <td><b>${s.name}</b></td>
-                <td><input type="number" value="${s.total}" onchange="updateTotal(${i}, this.value)" style="width:50px"></td>
-                <td>
-                    <div class="counter-group">
-                        <button class="btn btn-dec" onclick="update(${i}, 'p', -1)">-</button>
-                        <span>${s.p}</span>
-                        <button class="btn btn-inc" onclick="update(${i}, 'p', 1)">+</button>
-                    </div>
-                </td>
-                <td>
-                    <div class="counter-group">
-                        <button class="btn btn-dec" onclick="update(${i}, 'a', -1)">-</button>
-                        <span>${s.a}</span>
-                        <button class="btn btn-inc" onclick="update(${i}, 'a', 1)">+</button>
-                    </div>
-                </td>
-                <td style="color:${parseFloat(currentPct) < targetPct ? 'var(--danger)' : 'var(--success)'}; font-weight:bold">${currentPct}%</td>
-                <td>${goalStatus}</td>
-                <td><button class="btn" style="color:#94a3b8; background: transparent;" onclick="removeSub(${i})">&times;</button></td>
-            </tr>`;
+    // Column 1: Subject Name (XSS Safe via textContent)
+    const tdName = document.createElement('td');
+    const bName = document.createElement('b');
+    bName.textContent = s.name;
+    tdName.appendChild(bName);
+    tr.appendChild(tdName);
+
+    // Column 2: Total Classes Input
+    const tdTotal = document.createElement('td');
+    const inputTotal = document.createElement('input');
+    inputTotal.type = 'number';
+    inputTotal.value = s.total;
+    inputTotal.style.width = '50px';
+    inputTotal.onchange = function () {
+      updateTotal(i, this.value);
+    };
+    tdTotal.appendChild(inputTotal);
+    tr.appendChild(tdTotal);
+
+    // Column 3: Present Counter Group
+    const tdPresent = document.createElement('td');
+    const divPGroup = document.createElement('div');
+    divPGroup.className = 'counter-group';
+
+    const btnPDec = document.createElement('button');
+    btnPDec.className = 'btn btn-dec';
+    btnPDec.textContent = '-';
+    btnPDec.onclick = function () {
+      update(i, 'p', -1);
+    };
+
+    const spanP = document.createElement('span');
+    spanP.textContent = s.p;
+
+    const btnPInc = document.createElement('button');
+    btnPInc.className = 'btn btn-inc';
+    btnPInc.textContent = '+';
+    btnPInc.onclick = function () {
+      update(i, 'p', 1);
+    };
+
+    divPGroup.appendChild(btnPDec);
+    divPGroup.appendChild(spanP);
+    divPGroup.appendChild(btnPInc);
+    tdPresent.appendChild(divPGroup);
+    tr.appendChild(tdPresent);
+
+    // Column 4: Absent Counter Group
+    const tdAbsent = document.createElement('td');
+    const divAGroup = document.createElement('div');
+    divAGroup.className = 'counter-group';
+
+    const btnADec = document.createElement('button');
+    btnADec.className = 'btn btn-dec';
+    btnADec.textContent = '-';
+    btnADec.onclick = function () {
+      update(i, 'a', -1);
+    };
+
+    const spanA = document.createElement('span');
+    spanA.textContent = s.a;
+
+    const btnAInc = document.createElement('button');
+    btnAInc.className = 'btn btn-inc';
+    btnAInc.textContent = '+';
+    btnAInc.onclick = function () {
+      update(i, 'a', 1);
+    };
+
+    divAGroup.appendChild(btnADec);
+    divAGroup.appendChild(spanA);
+    divAGroup.appendChild(btnAInc);
+    tdAbsent.appendChild(divAGroup);
+    tr.appendChild(tdAbsent);
+
+    // Column 5: Current Percentage Label
+    const tdPct = document.createElement('td');
+    tdPct.style.color = parseFloat(currentPct) < targetPct ? 'var(--danger)' : 'var(--success)';
+    tdPct.style.fontWeight = 'bold';
+    tdPct.textContent = `${currentPct}%`;
+    tr.appendChild(tdPct);
+
+    // Column 6: Goal Status (Using innerHTML for inner layout formatting safely since parameters are fixed numbers)
+    const tdGoal = document.createElement('td');
+    if (neededFromRemaining > remaining) {
+      tdGoal.innerHTML = `<span style="color:var(--danger)"><b>Impossible</b><br>Max possible: ${(((s.p + remaining) / s.total) * 100).toFixed(1)}%</span>`;
+    } else {
+      tdGoal.innerHTML = `Attend <b>${neededFromRemaining}</b> more<br><small>out of ${remaining} left</small>`;
+    }
+    tr.appendChild(tdGoal);
+
+    // Column 7: Remove Row Action Trigger Button
+    const tdRemove = document.createElement('td');
+    const btnRemove = document.createElement('button');
+    btnRemove.className = 'btn';
+    btnRemove.style.color = '#94a3b8';
+    btnRemove.style.background = 'transparent';
+    btnRemove.innerHTML = '&times;';
+    btnRemove.onclick = function () {
+      removeSub(i);
+    };
+    tdRemove.appendChild(btnRemove);
+    tr.appendChild(tdRemove);
+
+    body.appendChild(tr);
   });
 
+  // Render Log Items cleanly without innerHTML compilation loops
   data.logs
     .slice(-15)
     .reverse()
     .forEach((log) => {
-      logBox.innerHTML += `<div class="history-item"><span><b>${log.sub}</b></span><span>${log.type}</span></div>`;
+      const logDiv = document.createElement('div');
+      logDiv.className = 'history-item';
+
+      const spanSub = document.createElement('span');
+      const bSub = document.createElement('b');
+      bSub.textContent = log.sub; // Safe text injection
+      spanSub.appendChild(bSub);
+
+      const spanType = document.createElement('span');
+      spanType.textContent = log.type;
+
+      logDiv.appendChild(spanSub);
+      logDiv.appendChild(spanType);
+      logBox.appendChild(logDiv);
     });
 
   localStorage.setItem('att_v5', JSON.stringify(data));
@@ -106,29 +199,29 @@ function updateTotal(i, val) {
 
   render();
 }
+
 function update(i, field, val) {
-    const subject = data.subjects[i];
+  const subject = data.subjects[i];
 
-    if (val === -1 && subject[field] === 0) return;
+  if (val === -1 && subject[field] === 0) return;
 
-    const conducted = subject.p + subject.a;
+  const conducted = subject.p + subject.a;
 
-    if (val === 1 && conducted >= subject.total) {
-        alert("Total classes limit reached.");
-        return;
-    }
+  if (val === 1 && conducted >= subject.total) {
+    alert("Total classes limit reached.");
+    return;
+  }
 
-    subject[field] += val;
+  subject[field] += val;
 
-    data.logs.push({
-        sub: subject.name,
-        type: (field === 'p' ? 'P' : 'A') + (val > 0 ? '+' : '-'),
-        date: new Date().toLocaleTimeString()
-    });
+  data.logs.push({
+    sub: subject.name,
+    type: (field === 'p' ? 'P' : 'A') + (val > 0 ? '+' : '-'),
+    date: new Date().toLocaleTimeString()
+  });
 
-    render();
+  render();
 }
-
 
 function removeSub(i) {
   if (confirm('Delete?')) {
