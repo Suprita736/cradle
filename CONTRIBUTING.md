@@ -25,7 +25,6 @@ You can contribute in many ways, including:
 
 Every contribution, no matter how small, is valuable.
 
-<br>
 
 # Before You Start
 
