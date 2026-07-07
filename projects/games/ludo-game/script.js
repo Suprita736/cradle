@@ -324,6 +324,7 @@ function rollDice() {
         isRolling = false;
         setStatus(`${capitalize(COLORS[currentPlayerIndex])} rolled ${diceValue}`);
         
+        saveGame();
         checkAutoTurn();
     }, 1000);
 }
@@ -475,6 +476,7 @@ function executeMove(token) {
     if (checkWinner(token.color)) {
         gameOver = true;
         setStatus(`${capitalize(token.color)} wins!`);
+        localStorage.removeItem('ludoSave');
         return;
     }
 
@@ -484,6 +486,9 @@ function executeMove(token) {
         setTimeout(() => {
             diceValue = null;
             setStatus(`${capitalize(COLORS[currentPlayerIndex])} gets another turn`);
+            
+            saveGame();
+
             if (playerTypes[COLORS[currentPlayerIndex]] === 'bot') {
                 setTimeout(rollDice, 800);
             }
@@ -520,6 +525,8 @@ function nextTurn() {
     updatePlayerIndicators();
     renderHistory();
     
+    saveGame();
+    
     if (playerTypes[COLORS[currentPlayerIndex]] === 'bot') {
         setTimeout(rollDice, 800);
     }
@@ -555,6 +562,8 @@ function newGame() {
     setStatus("Red's turn");
     updatePlayerIndicators();
     renderHistory();
+    
+    saveGame();
     
     if (playerTypes[COLORS[currentPlayerIndex]] === 'bot') {
         setTimeout(rollDice, 800);
@@ -621,4 +630,90 @@ document.getElementById("startGameBtn").addEventListener("click", () => {
 
 document.getElementById("backHome").addEventListener("click", () => window.location.href = "/");
 
-newGame();
+// Save/Load System
+function saveGame() {
+    const saveData = {
+        state: state,
+        history: history,
+        currentPlayerIndex: currentPlayerIndex,
+        diceValue: diceValue,
+        playerTypes: playerTypes
+    };
+    localStorage.setItem('ludoSave', JSON.stringify(saveData));
+}
+
+function loadGame(saveData) {
+    state = saveData.state;
+    history = saveData.history;
+    currentPlayerIndex = saveData.currentPlayerIndex;
+    diceValue = saveData.diceValue;
+    playerTypes = saveData.playerTypes || playerTypes;
+
+    COLORS.forEach(color => {
+        state[color].forEach(token => {
+            token.animProgress = 1;
+            token.zOffset = 0;
+            let coords = getTokenCoordinate(token);
+            if (coords) {
+                token.currentX = coords.x;
+                token.currentY = coords.y;
+                token.targetX = coords.x;
+                token.targetY = coords.y;
+                token.startX = coords.x;
+                token.startY = coords.y;
+            }
+        });
+    });
+
+    if (diceValue !== null) {
+        diceCube.className = `cube show-${diceValue}`;
+        setStatus(`${capitalize(COLORS[currentPlayerIndex])} rolled ${diceValue}`);
+    } else {
+        diceCube.className = 'cube';
+        setStatus(`${capitalize(COLORS[currentPlayerIndex])}'s turn`);
+    }
+    
+    turnLabel.textContent = capitalize(COLORS[currentPlayerIndex]);
+    moveCount.textContent = history.length;
+    
+    updatePlayerIndicators();
+    renderHistory();
+    
+    document.getElementById('icon-red').textContent = playerTypes.red === 'human' ? '👤' : '🤖';
+    document.getElementById('icon-green').textContent = playerTypes.green === 'human' ? '👤' : '🤖';
+    document.getElementById('icon-blue').textContent = playerTypes.blue === 'human' ? '👤' : '🤖';
+    document.getElementById('icon-yellow').textContent = playerTypes.yellow === 'human' ? '👤' : '🤖';
+
+    if (diceValue !== null) {
+        checkAutoTurn();
+    } else if (playerTypes[COLORS[currentPlayerIndex]] === 'bot') {
+        setTimeout(rollDice, 800);
+    }
+}
+
+// Initial Load Logic
+const savedDataString = localStorage.getItem('ludoSave');
+const resumeModal = document.getElementById('resumeModal');
+
+if (savedDataString) {
+    resumeModal.classList.remove('hidden');
+} else {
+    setupModal.classList.remove('hidden');
+}
+
+document.getElementById('resumeGameBtn').addEventListener('click', () => {
+    resumeModal.classList.add('hidden');
+    try {
+        const savedData = JSON.parse(savedDataString);
+        loadGame(savedData);
+    } catch (e) {
+        console.error("Failed to load save data", e);
+        setupModal.classList.remove('hidden');
+    }
+});
+
+document.getElementById('startFreshBtn').addEventListener('click', () => {
+    resumeModal.classList.add('hidden');
+    localStorage.removeItem('ludoSave');
+    setupModal.classList.remove('hidden');
+});
