@@ -10,6 +10,11 @@
     "path": "projects/productivity/attendance-tracker/"
   },
   {
+    "title": "Cannon Shooting",
+    "category": "games",
+    "path": "projects/games/cannon-shooting/"
+  },
+  {
     "title": "Chess",
     "category": "games",
     "path": "projects/games/chess/"
@@ -33,6 +38,11 @@
     "title": "Ludo Game",
     "category": "games",
     "path": "projects/games/ludo-game/"
+  },
+  {
+    "title": "Meme Generator",
+    "category": "misc",
+    "path": "projects/misc/meme-generator/"
   },
   {
     "title": "Memory Flip Game",

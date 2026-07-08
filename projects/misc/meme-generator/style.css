@@ -1,0 +1,137 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans&display=swap');
+
+:root {
+  --x: 45deg;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  min-height: 100vh;
+  padding: 20px;
+
+  background: #1229a0;
+  font-family: 'Work Sans', sans-serif;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  gap: 20px;
+  width: 100%;
+  max-width: 500px;
+
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+#root h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+}
+
+#meme {
+  display: block;
+
+  width: 100%;
+  max-width: 450px;
+  height: auto;
+
+  border: 10px solid #fbd208;
+  border-radius: 30px;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+a {
+  position: relative;
+  display: inline-block;
+
+  width: 150px;
+  height: 55px;
+
+  text-decoration: none;
+}
+
+a i {
+  position: absolute;
+  inset: -2px;
+
+  display: block;
+
+  border-radius: 5px;
+
+  background: linear-gradient(
+    var(--x),
+    #04ff92,
+    #0e1538,
+    #0e1538,
+    #fbd208
+  );
+}
+
+a i:nth-child(2) {
+  filter: blur(12px);
+}
+
+a span {
+  position: absolute;
+  inset: 1px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  overflow: hidden;
+
+  color: #fff;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+
+  background: rgba(14, 21, 56, 0.65);
+  border-radius: 5px;
+}
+
+a span::before {
+  content: '';
+
+  position: absolute;
+  top: 0;
+  left: -50%;
+
+  width: 50%;
+  height: 100%;
+
+  background: rgba(255, 255, 255, 0.08);
+  transform: skew(25deg);
+}
+
+@media (max-width: 500px) {
+  body {
+    padding: 16px;
+  }
+
+  #root {
+    justify-content: flex-start;
+    padding-top: 30px;
+  }
+
+  #meme {
+    width: 100%;
+    max-width: 340px;
+  }
+}
