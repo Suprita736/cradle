@@ -91,7 +91,8 @@ function renderCategories() {
         ? "category-btn active"
         : "category-btn";
 
-    btn.textContent = category;
+    // Standardize text to uppercase and swap dashes with spaces or hyphens gracefully
+    btn.textContent = category.toUpperCase().replace("-", " ");
 
     btn.onclick = () => {
       selectedCategory = category;

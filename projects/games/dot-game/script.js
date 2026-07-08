@@ -107,12 +107,12 @@ function clearHint() {
 
 function addDot(row, col) {
     if (!state.isActive) return;
-    
+
     const player = state.players[state.currentPlayer];
     if (state.gameMode === 'pvai' && player !== COLORS[0] && !state.isAiTurnProcessing) {
         return; // Prevent human click during AI turn
     }
-    
+
     const cell = state.board[row][col];
 
     if (cell.owner && cell.owner !== player) return;
@@ -128,22 +128,27 @@ function addDot(row, col) {
     cell.owner = player;
     cell.dots++;
 
-    let didExplode = resolveBoard();
-    
-    if (state.isActive) {
-        checkGameOver();
-    }
-    
-    if (state.isActive) {
-        // If we strictly follow the prompt's "extra turn after box completion" mapped to "extra turn after explosion"
-        if (didExplode) {
-            // Player gets another turn
-            currentPlayerElement.textContent = state.players[state.currentPlayer] + " (Extra Turn!)";
-        } else {
-            nextTurn();
+    // Show the dot landing immediately, before any chain reaction plays out
+    render(false);
+
+    // Kick off the (possibly multi-step, async) chain reaction.
+    // This never blocks the browser, no matter how long the chain runs.
+    resolveBoardStep([{ row, col }], (didExplode) => {
+        if (state.isActive) {
+            checkGameOver();
         }
-    }
-    render();
+
+        if (state.isActive) {
+            // If we strictly follow the prompt's "extra turn after box completion" mapped to "extra turn after explosion"
+            if (didExplode) {
+                // Player gets another turn
+                currentPlayerElement.textContent = state.players[state.currentPlayer] + " (Extra Turn!)";
+            } else {
+                nextTurn();
+            }
+        }
+        render();
+    });
 }
 
 function getBestMove(player) {
@@ -194,12 +199,12 @@ function getBestMove(player) {
                     score -= 500;
                 }
             }
-            
+
             if (score > bestScore) {
                 bestScore = score;
-                bestMoves = [{r, c}];
+                bestMoves = [{ r, c }];
             } else if (score === bestScore) {
-                bestMoves.push({r, c});
+                bestMoves.push({ r, c });
             }
         }
     }
@@ -214,7 +219,7 @@ function getRandomMove(player) {
         for (let c = 0; c < boardSize; c++) {
             const cell = state.board[r][c];
             if (!cell.owner || cell.owner === player) {
-                validMoves.push({r, c});
+                validMoves.push({ r, c });
             }
         }
     }
@@ -228,13 +233,13 @@ function handleAiTurn() {
     if (state.gameMode === 'pvai' && player !== COLORS[0] && !state.isAiTurnProcessing) {
         state.isAiTurnProcessing = true;
         boardElement.classList.add('ai-thinking');
-        
+
         setTimeout(() => {
             if (!state.isActive) return;
-            
+
             let move;
             const diff = difficultyElement.value;
-            
+
             if (diff === 'easy') {
                 move = getRandomMove(player);
             } else if (diff === 'medium') {
@@ -246,42 +251,60 @@ function handleAiTurn() {
             } else {
                 move = getBestMove(player);
             }
-            
+
             if (move) {
                 addDot(move.r, move.c);
             }
-            
+
             boardElement.classList.remove('ai-thinking');
             state.isAiTurnProcessing = false;
-            
-            // Check if it's still AI's turn (e.g. they got an extra turn)
-            if (state.isActive && state.players[state.currentPlayer] !== COLORS[0]) {
-                handleAiTurn();
-            }
+            // Whether it's still the AI's turn (extra turn) is handled
+            // automatically: addDot's callback ends in render(), which
+            // calls handleAiTurn() again if it's still an AI player's turn
+            // and isAiTurnProcessing is now false.
         }, 500);
     }
 }
 
-function resolveBoard() {
-    let changed = true;
-    let anyExplosion = false;
+// Async, step-by-step chain reaction resolver.
+// Instead of rescanning the WHOLE board every round (slow) and running
+// fully synchronously (freezes the tab on long chains), this only
+// re-checks cells adjacent to a recent explosion, and yields control
+// back to the browser between each wave via setTimeout.
+function resolveBoardStep(queue, onDone, explodedAny = false) {
+    if (queue.length === 0) {
+        onDone(explodedAny);
+        return;
+    }
 
-    while (changed) {
-        changed = false;
+    let next = [];
 
-        for (let row = 0; row < boardSize; row++) {
-            for (let col = 0; col < boardSize; col++) {
-                const cell = state.board[row][col];
+    for (const { row, col } of queue) {
+        const cell = state.board[row][col];
+        if (cell.dots >= getCapacity(row, col)) {
+            const owner = cell.owner;
+            explode(row, col, owner);
+            explodedAny = true;
 
-                if (cell.dots >= getCapacity(row, col)) {
-                    explode(row, col, cell.owner);
-                    changed = true;
-                    anyExplosion = true;
+            for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+                const nr = row + dr;
+                const nc = col + dc;
+                if (nr >= 0 && nr < boardSize && nc >= 0 && nc < boardSize) {
+                    next.push({ row: nr, col: nc });
                 }
             }
         }
     }
-    return anyExplosion;
+
+    // Show this wave of explosions before moving to the next one.
+    // `false` = don't trigger AI turn / game-over side effects mid-chain.
+    render(false);
+
+    if (next.length > 0) {
+        setTimeout(() => resolveBoardStep(next, onDone, explodedAny), 0);
+    } else {
+        onDone(explodedAny);
+    }
 }
 
 function explode(row, col, owner) {
@@ -289,7 +312,7 @@ function explode(row, col, owner) {
         owner: null,
         dots: 0
     };
-    
+
     state.analytics.totalExplosions++; // Analytics
 
     for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
@@ -297,9 +320,9 @@ function explode(row, col, owner) {
         const nc = col + dc;
 
         if (nr < 0 || nc < 0 || nr >= boardSize || nc >= boardSize) continue;
-        
+
         const neighbor = state.board[nr][nc];
-        
+
         if (neighbor.owner !== owner && neighbor.owner !== null) {
             state.analytics.captures[owner]++;
         }
@@ -312,7 +335,7 @@ function explode(row, col, owner) {
 function checkGameOver() {
     // Only check if everyone has had at least one turn
     if (state.analytics.moves <= state.players.length) return;
-    
+
     const activePlayers = new Set();
     for (let row = 0; row < boardSize; row++) {
         for (let col = 0; col < boardSize; col++) {
@@ -321,7 +344,7 @@ function checkGameOver() {
             }
         }
     }
-    
+
     if (activePlayers.size <= 1) {
         state.isActive = false;
         state.winner = activePlayers.size === 1 ? Array.from(activePlayers)[0] : 'draw';
@@ -332,7 +355,7 @@ function checkGameOver() {
 
 function nextTurn() {
     let next = (state.currentPlayer + 1) % state.players.length;
-    
+
     if (state.analytics.moves >= state.players.length) {
         let loopProtect = 0;
         while (!hasPieces(state.players[next]) && loopProtect < state.players.length) {
@@ -340,7 +363,7 @@ function nextTurn() {
             loopProtect++;
         }
     }
-    
+
     state.currentPlayer = next;
 }
 
@@ -356,7 +379,7 @@ function renderStats() {
 
         const div = document.createElement("div");
         div.className = `player-card ${player}`;
-        
+
         if (!state.isActive && state.winner === player) {
             div.textContent = `👑 ${player.toUpperCase()} : ${count}`;
         } else {
@@ -367,7 +390,10 @@ function renderStats() {
     });
 }
 
-function render() {
+// `triggerAiTurn` defaults to true. Pass false for intermediate renders
+// during a chain reaction, so the AI turn / game-over logic only ever
+// fires once, from the final render after the chain fully resolves.
+function render(triggerAiTurn = true) {
     if (state.isActive) {
         if (!currentPlayerElement.textContent.includes("Extra Turn!")) {
             currentPlayerElement.textContent = state.players[state.currentPlayer];
@@ -375,9 +401,9 @@ function render() {
             // Update the text but keep the Extra Turn suffix
             currentPlayerElement.textContent = state.players[state.currentPlayer] + " (Extra Turn!)";
         }
-        
+
         // Trigger AI turn if needed
-        if (state.gameMode === 'pvai' && state.players[state.currentPlayer] !== COLORS[0]) {
+        if (triggerAiTurn && state.gameMode === 'pvai' && state.players[state.currentPlayer] !== COLORS[0]) {
             // Wait slightly so render happens before AI blocking
             setTimeout(handleAiTurn, 50);
         }
@@ -387,7 +413,7 @@ function render() {
 
     renderBoard();
     renderStats();
-    
+
     if (state.isActive && state.gameMode === 'pvai' && state.players[state.currentPlayer] !== COLORS[0]) {
         hintBtnElement.disabled = true;
     } else if (state.isActive) {
@@ -400,7 +426,7 @@ function render() {
 function startGame() {
     const count = +playerCountElement.value;
     const players = COLORS.slice(0, count);
-    
+
     let moveTimes = {};
     let captures = {};
     players.forEach(p => {
@@ -425,7 +451,7 @@ function startGame() {
             gridSize: `${boardSize}x${boardSize}`
         }
     };
-    
+
     // Set UI dropdown correctly
     if (boardSize === 3 || boardSize === 5 || boardSize === 8) {
         gridPresetElement.value = boardSize;
@@ -451,20 +477,20 @@ function saveMatchHistory() {
         explosions: state.analytics.totalExplosions,
         stats: {}
     };
-    
+
     state.players.forEach(p => {
         const times = state.analytics.moveTimes[p];
-        const avgTime = times.length ? (times.reduce((a,b)=>a+b,0) / times.length / 1000).toFixed(1) : 0;
-        
+        const avgTime = times.length ? (times.reduce((a, b) => a + b, 0) / times.length / 1000).toFixed(1) : 0;
+
         historyEntry.stats[p] = {
             captures: state.analytics.captures[p],
             avgMoveTime: avgTime
         };
     });
-    
+
     matchHistory.unshift(historyEntry); // Add to beginning
     if (matchHistory.length > 10) matchHistory.pop(); // Keep last 10
-    
+
     localStorage.setItem('dotGameHistory', JSON.stringify(matchHistory));
 }
 
@@ -473,13 +499,13 @@ function renderAnalytics() {
         analyticsContainer.innerHTML = '<p class="empty-state">No completed games yet.</p>';
         return;
     }
-    
+
     analyticsContainer.innerHTML = '';
-    
+
     matchHistory.forEach((match, idx) => {
         const card = document.createElement('div');
         card.className = 'analytics-card';
-        
+
         card.innerHTML = `
             <h3>Match on ${match.date} (${match.gridSize})</h3>
             <div class="stats-grid">
@@ -489,17 +515,17 @@ function renderAnalytics() {
             </div>
             <h4>Captures per Player</h4>
         `;
-        
+
         const chartCont = document.createElement('div');
         let maxCap = 0;
         for (const p in match.stats) {
             if (match.stats[p].captures > maxCap) maxCap = match.stats[p].captures;
         }
-        
+
         for (const p in match.stats) {
             const data = match.stats[p];
             const pct = maxCap > 0 ? (data.captures / maxCap) * 100 : 0;
-            
+
             const bar = document.createElement('div');
             bar.className = 'chart-bar';
             bar.innerHTML = `
@@ -511,23 +537,23 @@ function renderAnalytics() {
             `;
             chartCont.appendChild(bar);
         }
-        
+
         card.appendChild(chartCont);
-        
+
         const timeHeader = document.createElement('h4');
         timeHeader.textContent = "Avg Move Time (s)";
         card.appendChild(timeHeader);
-        
+
         const timeCont = document.createElement('div');
         let maxTime = 0;
         for (const p in match.stats) {
             if (parseFloat(match.stats[p].avgMoveTime) > maxTime) maxTime = parseFloat(match.stats[p].avgMoveTime);
         }
-        
+
         for (const p in match.stats) {
             const data = match.stats[p];
             const pct = maxTime > 0 ? (data.avgMoveTime / maxTime) * 100 : 0;
-            
+
             const bar = document.createElement('div');
             bar.className = 'chart-bar';
             bar.innerHTML = `
@@ -539,9 +565,9 @@ function renderAnalytics() {
             `;
             timeCont.appendChild(bar);
         }
-        
+
         card.appendChild(timeCont);
-        
+
         analyticsContainer.appendChild(card);
     });
 }
@@ -558,7 +584,7 @@ if (hintBtnElement) {
         if (!state.isActive) return;
         const player = state.players[state.currentPlayer];
         if (state.gameMode === 'pvai' && player !== COLORS[0]) return; // Not human's turn
-        
+
         clearHint();
         const bestMove = getBestMove(player);
         if (bestMove) {
