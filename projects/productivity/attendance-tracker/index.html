@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attendance Pro</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="../../../src/components/ui/tokens.css">
    
 </head>
 
@@ -16,17 +16,30 @@
         <div class="header">
             <h1>Attendance Dashboard</h1>
             <div class="header-actions">
-                <button class="btn btn-add btn-export" onclick="exportCSV()">
+                <button
+                    class="btn-export-action"
+                    data-cradle-btn
+                    data-variant="success"
+                    data-size="sm"
+                    data-left-icon="⬇"
+                    onclick="exportCSV()"
+                >
                     Export Data
                 </button>
 
-                <button class="btn btn-add" onclick="openModal()">
-                    + New Subject
+                <button
+                    data-cradle-btn
+                    data-variant="primary"
+                    data-size="sm"
+                    data-left-icon="+"
+                    onclick="openModal()"
+                >
+                    New Subject
                 </button>
             </div>
         </div>
 
-        <div class="card">
+        <div class="card" data-cradle-card data-title="Subjects">
             <table>
                 <thead>
                     <tr>
@@ -43,18 +56,23 @@
             </table>
         </div>
 
-        <div class="card">
+        <div class="card" data-cradle-card data-title="Recent History">
             <div class="history-header">
-                <h3>Recent History</h3>
-                <button class="btn btn-clear-history" onclick="clearHistory()" aria-label="Clear all attendance history">
+                <button
+                    class="btn-clear-history-action"
+                    data-cradle-btn
+                    data-variant="danger"
+                    data-size="sm"
+                    onclick="clearHistory()"
+                    aria-label="Clear all attendance history"
+                >
                     Clear History
                 </button>
             </div>
             <div id="history-log" class="history-list"></div>
         </div>
 
-        <div class="card">
-            <h3>Attendance Overview</h3>
+        <div class="card" data-cradle-card data-title="Attendance Overview">
             <div class="chart-container">
                 <canvas id="attendanceChart"></canvas>
             </div>
@@ -80,13 +98,23 @@
                     <label for="subTarget">Target Percentage (%)</label>
                     <input type="number" id="subTarget" value="75" min="1" max="100" required>
                 </div>
-                <button type="submit" class="btn btn-add" style="width: 100%; padding: 12px; margin-top: 10px;">Add
-                    Subject</button>
+                <button
+                    type="submit"
+                    data-cradle-btn
+                    data-variant="primary"
+                    data-size="md"
+                    data-full-width="true"
+                    style="margin-top: 10px;"
+                >
+                    Add Subject
+                </button>
             </form>
         </div>
     </div>
-</div>
-<script src="../../../projects/back-to-home.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="../../../src/components/ui/Button/Button.js"></script>
+<script src="../../../src/components/ui/Card/Card.js"></script>
+<script src="../../../src/components/ui/BackToHome/BackToHome.js" defer></script>
 <script src="script.js"></script>
 </body>
 

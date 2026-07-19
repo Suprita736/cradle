@@ -6,18 +6,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../../../src/components/ui/tokens.css">
 </head>
 <body>
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <div class="logo">⚔️ RPS <span>ARENA</span></div>
-    <ul class="nav-links">
-      <li><a href="#game">Play</a></li>
-      <li><a href="#how">How To Play</a></li>
-      <li><a href="#footer">About</a></li>
-    </ul>
-  </nav>
+  <div id="navbar-mount"></div>
 
   <!-- MAIN GAME -->
   <main id="game">
@@ -95,7 +88,24 @@
       <button class="modal-btn" id="playAgainBtn">Play Again</button>
     </div>
   </div>
-<script src="../../../projects/back-to-home.js" defer></script>
+<script src="../../../src/components/ui/Navbar/Navbar.js"></script>
+<script src="../../../src/components/ui/BackToHome/BackToHome.js" defer></script>
   <script src="script.js"></script>
+  <script>
+    (function () {
+      const nav = CradleNavbar.create({
+        logo: { text: '⚔️ RPS ARENA', href: '#game' },
+        links: [
+          { label: 'Play', href: '#game' },
+          { label: 'How To Play', href: '#how' },
+          { label: 'About', href: '#footer' },
+        ],
+        currentRoute: window.location.hash || '#game',
+      });
+      const mount = document.getElementById('navbar-mount');
+      mount.replaceWith(nav);
+      nav.insertAdjacentElement('afterend', nav._drawer);
+    })();
+  </script>
 </body>
 </html>

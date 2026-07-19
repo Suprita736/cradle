@@ -88,7 +88,6 @@ async function loadProjects() {
         renderCategories();
         renderProjects(allProjects);
 
-        // Background update
         fetchAndCacheProjects(db)
           .then(() => {
             renderCategories();
@@ -121,20 +120,16 @@ function renderCategories() {
   categoriesContainer.innerHTML = "";
 
   categories.forEach((category) => {
-    const btn = document.createElement("button");
-
-    btn.className =
-      category === selectedCategory
-        ? "category-btn active"
-        : "category-btn";
-
-    btn.textContent = category.toUpperCase().replace("-", " ");
-
-    btn.onclick = () => {
-      selectedCategory = category;
-      applyFilters();
-      renderCategories();
-    };
+    const btn = CradleButton.create({
+      variant: category === selectedCategory ? "primary" : "ghost",
+      size: "sm",
+      children: category.toUpperCase().replace("-", " "),
+      onClick: () => {
+        selectedCategory = category;
+        applyFilters();
+        renderCategories();
+      },
+    });
 
     categoriesContainer.appendChild(btn);
   });
@@ -148,34 +143,27 @@ function renderProjects(projects) {
     return;
   }
 
-  projectsGrid.innerHTML = projects
-    .map(
-      (project) => `
-      <article class="project-card">
-        <div class="project-category">
-          ${project.category}
-        </div>
+  projectsGrid.innerHTML = "";
 
-        <h3 class="project-title">
-          ${project.title}
-        </h3>
+  projects.forEach((project) => {
+    const card = CradleCard.create({
+      title: project.title,
+      subtitle: project.path,
+      badge: project.category,
+      footer: CradleButton.create({
+        variant: "outline",
+        size: "sm",
+        children: "Open Project",
+        rightIcon: "→",
+        href: project.path,
+        target: "_blank",
+        rel: "noopener noreferrer",
+      }),
+      footerAlign: "left",
+    });
 
-        <p class="project-path">
-          ${project.path}
-        </p>
-
-        <a
-          class="project-link"
-          href="${project.path}"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Open Project →
-        </a>
-      </article>
-    `
-    )
-    .join("");
+    projectsGrid.appendChild(card);
+  });
 }
 
 function applyFilters() {
@@ -225,8 +213,5 @@ if (clearFiltersBtn) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  initTheme();
   loadProjects();
 });
-
-window.toggleTheme = toggleTheme;
