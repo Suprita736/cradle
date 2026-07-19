@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Core8 - 8-Bit Virtual Machine CPU Emulator</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../../../src/components/ui/tokens.css">
 </head>
 
 <body>
@@ -22,10 +23,10 @@
                         <input type="checkbox" id="chk-animate" checked>
                         Animate Data Flow
                     </label>
-                    <button id="btn-assemble" class="btn primary-btn">compile</button>
-                    <button id="btn-step" class="btn secondary-btn" disabled>Step</button>
-                    <button id="btn-run" class="btn success-btn" disabled>▶Run Machine</button>
-                    <button id="btn-reset" class="btn danger-btn">Reset</button>
+                    <button id="btn-assemble" data-cradle-btn data-variant="primary" data-size="sm">compile</button>
+                    <button id="btn-step" data-cradle-btn data-variant="secondary" data-size="sm" disabled>Step</button>
+                    <button id="btn-run" data-cradle-btn data-variant="success" data-size="sm" disabled>▶Run Machine</button>
+                    <button id="btn-reset" data-cradle-btn data-variant="danger" data-size="sm">Reset</button>
                 </div>
             </header>
 
@@ -93,7 +94,8 @@
             </section>
         </aside>
     </div>
- <script src="../../../projects/back-to-home.js" defer></script>
+ <script src="../../../src/components/ui/Button/Button.js"></script>
+ <script src="../../../src/components/ui/BackToHome/BackToHome.js" defer></script>
     <script src="script.js"></script>
 </body>
 

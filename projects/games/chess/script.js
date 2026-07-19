@@ -434,6 +434,3 @@ document.getElementById("gameMode").addEventListener("change", (e) => {
 });
 
 newGame();
-document.getElementById("backHome").addEventListener("click", () => {
-    window.location.href = "/";
-});

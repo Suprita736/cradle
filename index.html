@@ -14,6 +14,16 @@
     rel="stylesheet" />
 
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="src/components/ui/tokens.css" />
+
+  <!-- Prevent flash of wrong theme before CSS loads -->
+  <script>
+    (function () {
+      var t = localStorage.getItem('theme') ||
+        (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      if (t === 'light') document.documentElement.classList.add('light-theme');
+    })();
+  </script>
 
 </head>
 
@@ -26,9 +36,14 @@
     </p>
 
     <div class="hero-actions">
-      <button id="themeToggle" class="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
-        🌙
-      </button>
+      <!-- Upgraded: CradleThemeToggle component (replaces hardcoded emoji button) -->
+      <button
+        id="themeToggle"
+        data-cradle-theme-toggle
+        data-size="md"
+        class="theme-toggle"
+        aria-label="Toggle theme"
+      ></button>
     </div>
 
     <div class="search-container">
@@ -43,7 +58,14 @@
           aria-label="Search projects" />
       </div>
 
-      <button id="clear-filters" class="clear-filters-btn" hidden aria-label="Clear all filters">
+      <button
+        id="clear-filters"
+        data-cradle-btn
+        data-variant="ghost"
+        data-size="sm"
+        hidden
+        aria-label="Clear all filters"
+      >
         ✕ Clear Filters
       </button>
     </div>
@@ -74,8 +96,9 @@
       </a>
     </p>
   </footer>
-  <script src="../../../projects/back-to-home.js" defer></script>
-  <script src="scripts/theme.js"></script>
+  <script src="src/components/ui/Button/Button.js"></script>
+  <script src="src/components/ui/Card/Card.js"></script>
+  <script src="src/components/ui/ThemeToggle/ThemeToggle.js"></script>
   <script type="module" src="script.js"></script>
 </body>
 

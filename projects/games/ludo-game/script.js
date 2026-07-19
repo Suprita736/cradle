@@ -630,8 +630,6 @@ document.getElementById("startGameBtn").addEventListener("click", () => {
     newGame();
 });
 
-document.getElementById("backHome").addEventListener("click", () => window.location.href = "/");
-
 // Save/Load System
 function saveGame() {
     const saveData = {

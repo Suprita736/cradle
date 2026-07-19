@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>2048</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="../../../src/components/ui/tokens.css" />
 </head>
 <body>
   <main class="game-shell">
@@ -28,7 +29,13 @@
 
       <section class="controls" aria-label="Game controls">
         <p class="instructions">Use the arrow keys to slide the tiles. Merge matching numbers to grow your score.</p>
-        <button id="restartBtn" type="button">Restart</button>
+        <button
+          id="restartBtn"
+          type="button"
+          data-cradle-btn
+          data-variant="primary"
+          data-size="md"
+        >Restart</button>
       </section>
 
       <section class="board" id="board" aria-label="2048 board"></section>
@@ -39,7 +46,8 @@
     </section>
   </main>
 
-  <script src="../../../projects/back-to-home.js" defer></script>
+  <script src="../../../src/components/ui/Button/Button.js"></script>
+  <script src="../../../src/components/ui/BackToHome/BackToHome.js" defer></script>
   <script src="logic.js"></script>
   <script src="script.js"></script>
 </body>
