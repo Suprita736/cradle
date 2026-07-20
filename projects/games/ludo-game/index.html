@@ -43,9 +43,6 @@
                     <button id="newGame" class="btn btn-secondary">
                         <span class="btn-icon">🔄</span> New Game
                     </button>
-                    <button id="backHome" class="btn btn-ghost">
-                        <span class="btn-icon">🏠</span> Home
-                    </button>
                 </div>
             </div>
 
@@ -55,18 +52,22 @@
                     <div class="player-row active" data-color="red">
                         <div class="player-dot red"></div>
                         <span>Red</span>
+                        <span class="player-type-icon" id="icon-red">👤</span>
                     </div>
                     <div class="player-row" data-color="green">
                         <div class="player-dot green"></div>
                         <span>Green</span>
+                        <span class="player-type-icon" id="icon-green">🤖</span>
                     </div>
                     <div class="player-row" data-color="blue">
                         <div class="player-dot blue"></div>
                         <span>Blue</span>
+                        <span class="player-type-icon" id="icon-blue">🤖</span>
                     </div>
                     <div class="player-row" data-color="yellow">
                         <div class="player-dot yellow"></div>
                         <span>Yellow</span>
+                        <span class="player-type-icon" id="icon-yellow">🤖</span>
                     </div>
                 </div>
             </div>
@@ -98,6 +99,68 @@
         </aside>
     </main>
 
+    <!-- RESUME MODAL -->
+    <div id="resumeModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2>Session Detected</h2>
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 10px;">It looks like you have an unfinished game. Would you like to resume?</p>
+            <button id="resumeGameBtn" class="btn btn-roll">
+                <span class="btn-icon">▶️</span> Resume Game
+            </button>
+            <button id="startFreshBtn" class="btn btn-ghost">
+                Start Fresh
+            </button>
+        </div>
+    </div>
+
+    <!-- SETUP MODAL -->
+    <div id="setupModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2>Game Setup</h2>
+            <div class="player-config-list">
+                <div class="player-config-row">
+                    <div class="player-dot red"></div>
+                    <span>Red Player</span>
+                    <select id="select-red">
+                        <option value="human">Human 👤</option>
+                        <option value="bot">Bot 🤖</option>
+                    </select>
+                </div>
+                <div class="player-config-row">
+                    <div class="player-dot green"></div>
+                    <span>Green Player</span>
+                    <select id="select-green">
+                        <option value="human">Human 👤</option>
+                        <option value="bot" selected>Bot 🤖</option>
+                    </select>
+                </div>
+                <div class="player-config-row">
+                    <div class="player-dot blue"></div>
+                    <span>Blue Player</span>
+                    <select id="select-blue">
+                        <option value="human">Human 👤</option>
+                        <option value="bot" selected>Bot 🤖</option>
+                    </select>
+                </div>
+                <div class="player-config-row">
+                    <div class="player-dot yellow"></div>
+                    <span>Yellow Player</span>
+                    <select id="select-yellow">
+                        <option value="human">Human 👤</option>
+                        <option value="bot" selected>Bot 🤖</option>
+                    </select>
+                </div>
+            </div>
+            <button id="startGameBtn" class="btn btn-roll" style="margin-top: 20px;">
+                <span class="btn-icon">▶️</span> Start Game
+            </button>
+            <button id="closeModalBtn" class="btn btn-ghost" style="margin-top: 10px;">
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <script src="../../../src/components/ui/BackToHome/BackToHome.js" defer></script>
     <script src="script.js"></script>
 </body>
 </html>

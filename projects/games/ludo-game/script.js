@@ -61,6 +61,13 @@ let history = [];
 let gameOver = false;
 let hoveredToken = null;
 
+let playerTypes = {
+    red: 'human',
+    green: 'bot',
+    blue: 'bot',
+    yellow: 'bot'
+};
+
 let state = {
     red: createTokens("red"),
     green: createTokens("green"),
@@ -271,6 +278,7 @@ function renderLoop() {
 requestAnimationFrame(renderLoop);
 
 
+
 // --- LOGIC ---
 function getTokenCoordinate(token) {
     if (token.finished) return null;
@@ -317,18 +325,97 @@ function rollDice() {
         isRolling = false;
         setStatus(`${capitalize(COLORS[currentPlayerIndex])} rolled ${diceValue}`);
         
+        saveGame();
         checkAutoTurn();
     }, 1000);
+
 }
 
 function checkAutoTurn() {
     let validMoves = state[COLORS[currentPlayerIndex]].filter(t => isValidMove(t));
     if (validMoves.length === 0) {
         setTimeout(nextTurn, 1000);
+    } else if (playerTypes[COLORS[currentPlayerIndex]] === 'bot') {
+        setTimeout(() => executeAITurn(validMoves), 800);
     } else if (validMoves.length === 1 && validMoves[0].position !== -1) {
         // Auto move if only one valid non-home token
         // setTimeout(() => executeMove(validMoves[0]), 500); // optional polish
     }
+}
+
+function executeAITurn(validMoves) {
+    if (validMoves.length === 0) return;
+    
+    let bestMove = null;
+    let bestScore = -1;
+
+    // Heuristic evaluation
+    validMoves.forEach(token => {
+        let score = evaluateMove(token);
+        if (score > bestScore) {
+            bestScore = score;
+            bestMove = token;
+        } else if (score === bestScore) {
+            // Random tie break
+            if (Math.random() > 0.5) {
+                bestMove = token;
+            }
+        }
+    });
+
+    if (bestMove) {
+        executeMove(bestMove);
+    }
+}
+
+function evaluateMove(token) {
+    let score = 10; // Base score for any valid move
+    
+    // Simulate move
+    let newPosition = -1;
+    let newIsVictoryPath = token.isVictoryPath;
+
+    if (token.position === -1) {
+        score += 50; // Move out of home
+        newPosition = START_INDEX[token.color];
+    } else if (token.isVictoryPath) {
+        newPosition = token.position + diceValue;
+        if (newPosition === 5) {
+            score += 50; // Finished
+        }
+    } else {
+        let dist = calculateDistanceToHome(token);
+        if (diceValue > dist) {
+            newIsVictoryPath = true;
+            newPosition = diceValue - dist - 1;
+            score += 50; // Entering victory path
+        } else {
+            newPosition = (token.position + diceValue) % 52;
+        }
+    }
+
+    // Check captures
+    if (!newIsVictoryPath && newPosition !== -1) {
+        let [r, c] = GLOBAL_TRACK[newPosition];
+        let isSafe = SAFE_ZONES.some(z => z[0]===r && z[1]===c);
+        
+        if (isSafe) {
+            score += 50; // Moving to safe zone
+        } else {
+            // Check if capturing opponent
+            COLORS.forEach(c => {
+                if (c !== token.color) {
+                    state[c].forEach(targetToken => {
+                        if (!targetToken.isVictoryPath && targetToken.position === newPosition) {
+                            score += 100; // Capture opponent
+                        }
+                    });
+                }
+            });
+        }
+    }
+    
+    return score;
 }
 
 function isValidMove(token) {
@@ -391,6 +478,7 @@ function executeMove(token) {
     if (checkWinner(token.color)) {
         gameOver = true;
         setStatus(`${capitalize(token.color)} wins!`);
+        localStorage.removeItem('ludoSave');
         return;
     }
 
@@ -400,6 +488,12 @@ function executeMove(token) {
         setTimeout(() => {
             diceValue = null;
             setStatus(`${capitalize(COLORS[currentPlayerIndex])} gets another turn`);
+            
+            saveGame();
+
+            if (playerTypes[COLORS[currentPlayerIndex]] === 'bot') {
+                setTimeout(rollDice, 800);
+            }
         }, 600);
     }
 }
@@ -432,6 +526,12 @@ function nextTurn() {
     setStatus(`${capitalize(COLORS[currentPlayerIndex])}'s turn`);
     updatePlayerIndicators();
     renderHistory();
+    
+    saveGame();
+    
+    if (playerTypes[COLORS[currentPlayerIndex]] === 'bot') {
+        setTimeout(rollDice, 800);
+    }
 }
 
 function updatePlayerIndicators() {
@@ -464,6 +564,12 @@ function newGame() {
     setStatus("Red's turn");
     updatePlayerIndicators();
     renderHistory();
+    
+    saveGame();
+    
+    if (playerTypes[COLORS[currentPlayerIndex]] === 'bot') {
+        setTimeout(rollDice, 800);
+    }
 }
 
 // Interactivity
@@ -494,8 +600,120 @@ canvas.addEventListener("click", () => {
     }
 });
 
-document.getElementById("rollDice").addEventListener("click", rollDice);
-document.getElementById("newGame").addEventListener("click", newGame);
-document.getElementById("backHome").addEventListener("click", () => window.location.href = "/");
+document.getElementById("rollDice").addEventListener("click", () => {
+    if (playerTypes[COLORS[currentPlayerIndex]] === 'human') {
+        rollDice();
+    }
+});
 
-newGame();
+const setupModal = document.getElementById('setupModal');
+document.getElementById("newGame").addEventListener("click", () => {
+    setupModal.classList.remove('hidden');
+});
+
+document.getElementById("closeModalBtn").addEventListener("click", () => {
+    setupModal.classList.add('hidden');
+});
+
+document.getElementById("startGameBtn").addEventListener("click", () => {
+    playerTypes.red = document.getElementById('select-red').value;
+    playerTypes.green = document.getElementById('select-green').value;
+    playerTypes.blue = document.getElementById('select-blue').value;
+    playerTypes.yellow = document.getElementById('select-yellow').value;
+    
+    document.getElementById('icon-red').textContent = playerTypes.red === 'human' ? '👤' : '🤖';
+    document.getElementById('icon-green').textContent = playerTypes.green === 'human' ? '👤' : '🤖';
+    document.getElementById('icon-blue').textContent = playerTypes.blue === 'human' ? '👤' : '🤖';
+    document.getElementById('icon-yellow').textContent = playerTypes.yellow === 'human' ? '👤' : '🤖';
+
+    setupModal.classList.add('hidden');
+    newGame();
+});
+
+// Save/Load System
+function saveGame() {
+    const saveData = {
+        state: state,
+        history: history,
+        currentPlayerIndex: currentPlayerIndex,
+        diceValue: diceValue,
+        playerTypes: playerTypes
+    };
+    localStorage.setItem('ludoSave', JSON.stringify(saveData));
+}
+
+function loadGame(saveData) {
+    state = saveData.state;
+    history = saveData.history;
+    currentPlayerIndex = saveData.currentPlayerIndex;
+    diceValue = saveData.diceValue;
+    playerTypes = saveData.playerTypes || playerTypes;
+
+    COLORS.forEach(color => {
+        state[color].forEach(token => {
+            token.animProgress = 1;
+            token.zOffset = 0;
+            let coords = getTokenCoordinate(token);
+            if (coords) {
+                token.currentX = coords.x;
+                token.currentY = coords.y;
+                token.targetX = coords.x;
+                token.targetY = coords.y;
+                token.startX = coords.x;
+                token.startY = coords.y;
+            }
+        });
+    });
+
+    if (diceValue !== null) {
+        diceCube.className = `cube show-${diceValue}`;
+        setStatus(`${capitalize(COLORS[currentPlayerIndex])} rolled ${diceValue}`);
+    } else {
+        diceCube.className = 'cube';
+        setStatus(`${capitalize(COLORS[currentPlayerIndex])}'s turn`);
+    }
+    
+    turnLabel.textContent = capitalize(COLORS[currentPlayerIndex]);
+    moveCount.textContent = history.length;
+    
+    updatePlayerIndicators();
+    renderHistory();
+    
+    document.getElementById('icon-red').textContent = playerTypes.red === 'human' ? '👤' : '🤖';
+    document.getElementById('icon-green').textContent = playerTypes.green === 'human' ? '👤' : '🤖';
+    document.getElementById('icon-blue').textContent = playerTypes.blue === 'human' ? '👤' : '🤖';
+    document.getElementById('icon-yellow').textContent = playerTypes.yellow === 'human' ? '👤' : '🤖';
+
+    if (diceValue !== null) {
+        checkAutoTurn();
+    } else if (playerTypes[COLORS[currentPlayerIndex]] === 'bot') {
+        setTimeout(rollDice, 800);
+    }
+}
+
+// Initial Load Logic
+const savedDataString = localStorage.getItem('ludoSave');
+const resumeModal = document.getElementById('resumeModal');
+
+if (savedDataString) {
+    resumeModal.classList.remove('hidden');
+} else {
+    setupModal.classList.remove('hidden');
+}
+
+document.getElementById('resumeGameBtn').addEventListener('click', () => {
+    resumeModal.classList.add('hidden');
+    try {
+        const savedData = JSON.parse(savedDataString);
+        loadGame(savedData);
+    } catch (e) {
+        console.error("Failed to load save data", e);
+        setupModal.classList.remove('hidden');
+    }
+});
+
+document.getElementById('startFreshBtn').addEventListener('click', () => {
+    resumeModal.classList.add('hidden');
+    localStorage.removeItem('ludoSave');
+    setupModal.classList.remove('hidden');
+});

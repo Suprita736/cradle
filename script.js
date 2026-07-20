@@ -1,180 +1,217 @@
+import { initTheme, toggleTheme } from "./scripts/theme.js";
+
 const projectsGrid = document.getElementById("projects-grid");
 const searchInput = document.getElementById("search");
 const categoriesContainer = document.getElementById("categories");
 const projectCount = document.getElementById("project-count");
+const clearFiltersBtn = document.getElementById("clear-filters");
 
 let allProjects = [];
 let selectedCategory = "all";
 
-function initTheme() {
-  const savedTheme =
-    localStorage.getItem("theme") || "dark";
-
-  setTheme(savedTheme);
+let filterWorker;
+if (window.Worker) {
+  filterWorker = new Worker("./scripts/worker.js");
+  filterWorker.onmessage = function (e) {
+    renderProjects(e.data);
+  };
 }
 
-function setTheme(theme) {
-  const html = document.documentElement;
-  const themeBtn = document.getElementById("themeToggle");
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("CradleDB", 1);
 
-  if (theme === "light") {
-    html.classList.add("light-theme");
+    request.onerror = () => reject(request.error);
 
-    if (themeBtn) {
-      themeBtn.innerHTML = "☀️";
-      themeBtn.setAttribute(
-        "aria-label",
-        "Switch to dark theme"
-      );
-    }
+    request.onsuccess = () => resolve(request.result);
 
-    localStorage.setItem("theme", "light");
-  } else {
-    html.classList.remove("light-theme");
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
 
-    if (themeBtn) {
-      themeBtn.innerHTML = "🌙";
-      themeBtn.setAttribute(
-        "aria-label",
-        "Switch to light theme"
-      );
-    }
+      if (!db.objectStoreNames.contains("projectsStore")) {
+        db.createObjectStore("projectsStore", {
+          keyPath: "id",
+        });
+      }
+    };
+  });
+}
 
-    localStorage.setItem("theme", "dark");
+function getCachedProjects(db) {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(["projectsStore"], "readonly");
+    const store = transaction.objectStore("projectsStore");
+    const request = store.get("projects");
+
+    request.onerror = () => reject(request.error);
+
+    request.onsuccess = () =>
+      resolve(request.result ? request.result.data : null);
+  });
+}
+
+async function fetchAndCacheProjects(db) {
+  const response = await fetch("./data/projects.json");
+
+  if (!response.ok) {
+    throw new Error("Failed to load projects");
   }
-}
 
-function toggleTheme() {
-  const isLight =
-    document.documentElement.classList.contains(
-      "light-theme"
-    );
+  const data = await response.json();
+  allProjects = data;
 
-  setTheme(isLight ? "dark" : "light");
+  if (db) {
+    const transaction = db.transaction(["projectsStore"], "readwrite");
+    const store = transaction.objectStore("projectsStore");
+
+    store.put({
+      id: "projects",
+      data: data,
+    });
+  }
+
+  return data;
 }
 
 async function loadProjects() {
   try {
-    const response = await fetch("./data/projects.json");
+    let db;
 
-    if (!response.ok) {
-      throw new Error("Failed to load projects");
+    try {
+      db = await openDB();
+
+      const cachedProjects = await getCachedProjects(db);
+
+      if (cachedProjects && cachedProjects.length > 0) {
+        allProjects = cachedProjects;
+
+        renderCategories();
+        renderProjects(allProjects);
+
+        fetchAndCacheProjects(db)
+          .then(() => {
+            renderCategories();
+            applyFilters();
+          })
+          .catch(console.error);
+
+        return;
+      }
+    } catch (e) {
+      console.warn("IndexedDB error:", e);
     }
 
-    allProjects = await response.json();
+    await fetchAndCacheProjects(db);
 
     renderCategories();
     renderProjects(allProjects);
   } catch (error) {
     console.error(error);
-
-    projectsGrid.innerHTML =
-      "<p>Failed to load projects.</p>";
+    projectsGrid.innerHTML = "<p>Failed to load projects.</p>";
   }
 }
 
 function renderCategories() {
   const categories = [
     "all",
-    ...new Set(
-      allProjects.map(project => project.category)
-    )
+    ...new Set(allProjects.map((project) => project.category)),
   ];
 
   categoriesContainer.innerHTML = "";
 
-  categories.forEach(category => {
-    const btn = document.createElement("button");
-
-    btn.className =
-      category === selectedCategory
-        ? "category-btn active"
-        : "category-btn";
-
-    // Standardize text to uppercase and swap dashes with spaces or hyphens gracefully
-    btn.textContent = category.toUpperCase().replace("-", " ");
-
-    btn.onclick = () => {
-      selectedCategory = category;
-
-      applyFilters();
-      renderCategories();
-    };
+  categories.forEach((category) => {
+    const btn = CradleButton.create({
+      variant: category === selectedCategory ? "primary" : "ghost",
+      size: "sm",
+      children: category.toUpperCase().replace("-", " "),
+      onClick: () => {
+        selectedCategory = category;
+        applyFilters();
+        renderCategories();
+      },
+    });
 
     categoriesContainer.appendChild(btn);
   });
 }
 
 function renderProjects(projects) {
-  projectCount.textContent =
-    `${projects.length} projects`;
+  projectCount.textContent = `${projects.length} projects`;
 
   if (!projects.length) {
-    projectsGrid.innerHTML =
-      "<p>No projects found.</p>";
-
+    projectsGrid.innerHTML = "<p>No projects found.</p>";
     return;
   }
 
-  projectsGrid.innerHTML = projects
-    .map(
-      project => `
-      <article class="project-card">
-        <div class="project-category">
-          ${project.category}
-        </div>
+  projectsGrid.innerHTML = "";
 
-        <h3 class="project-title">
-          ${project.title}
-        </h3>
+  projects.forEach((project) => {
+    const card = CradleCard.create({
+      title: project.title,
+      subtitle: project.path,
+      badge: project.category,
+      footer: CradleButton.create({
+        variant: "outline",
+        size: "sm",
+        children: "Open Project",
+        rightIcon: "→",
+        href: project.path,
+        target: "_blank",
+        rel: "noopener noreferrer",
+      }),
+      footerAlign: "left",
+    });
 
-        <p class="project-path">
-          ${project.path}
-        </p>
-
-        <a
-          class="project-link"
-          href="${project.path}"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Open Project →
-        </a>
-      </article>
-    `
-    )
-    .join("");
+    projectsGrid.appendChild(card);
+  });
 }
 
 function applyFilters() {
-  const query =
-    searchInput.value
-      .toLowerCase()
-      .trim();
+  const query = searchInput.value.toLowerCase().trim();
 
-  const filtered = allProjects.filter(
-    project =>
-      (selectedCategory === "all" ||
-        project.category === selectedCategory) &&
-      project.title
-        .toLowerCase()
-        .includes(query)
-  );
+  if (filterWorker) {
+    filterWorker.postMessage({
+      allProjects,
+      selectedCategory,
+      query,
+    });
+  } else {
+    const filtered = allProjects.filter(
+      (project) =>
+        (selectedCategory === "all" ||
+          project.category === selectedCategory) &&
+        project.title.toLowerCase().includes(query)
+    );
 
-  renderProjects(filtered);
+    renderProjects(filtered);
+  }
+
+  updateClearButtonVisibility(query);
 }
 
-searchInput.addEventListener(
-  "input",
-  applyFilters
-);
+function updateClearButtonVisibility(query) {
+  const hasActiveFilters =
+    query !== "" || selectedCategory !== "all";
 
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-    initTheme();
-    loadProjects();
+  if (clearFiltersBtn) {
+    clearFiltersBtn.hidden = !hasActiveFilters;
   }
-);
+}
 
-window.toggleTheme = toggleTheme;
+function clearFilters() {
+  searchInput.value = "";
+  selectedCategory = "all";
+
+  applyFilters();
+  renderCategories();
+}
+
+searchInput.addEventListener("input", applyFilters);
+
+if (clearFiltersBtn) {
+  clearFiltersBtn.addEventListener("click", clearFilters);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadProjects();
+});

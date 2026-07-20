@@ -8,15 +8,7 @@
   --accent-blue: #3b82f6;
 }
 
-html.light-theme {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f9fafb;
-  --bg-tertiary: #f3f4f6;
-  --text-primary: #111827;
-  --text-secondary: #4b5563;
-  --border-color: #e5e7eb;
-  --accent-blue: #2563eb;
-}
+
 
 body {
   font-family: 'Inter', system-ui, sans-serif;
@@ -99,6 +91,19 @@ html.light-theme body {
   color: #1f2937;
 }
 
+
+/* Light theme (default) */
+body {
+    color: #ffffff;
+    background: #ffffff;
+}
+
+/* Dark theme */
+body.dark {
+    color: #f8fafc;
+    background: #0f172a;
+}
+
 html.light-theme .bg-gray-950 {
   background-color: #f5f7fa !important;
 }
@@ -126,6 +131,10 @@ html.light-theme .bg-gray-800\/30 {
 
 html.light-theme .bg-gray-800\/20 {
   background-color: rgba(243, 244, 246, 0.2) !important;
+}
+
+html.light-theme .bg-gray-800\/60 {
+  background-color: #d1d5db !important;
 }
 
 html.light-theme .bg-gray-950\/40 {
@@ -176,4 +185,27 @@ html.light-theme select:focus {
 
 html.light-theme canvas {
   background-color: #f5f7fa !important;
+}
+
+/* Fix table header colors for Light Mode */
+html.light-theme thead tr.text-gray-400 th {
+  color: #1f2937 !important;
+  /* Default dark text */
+}
+
+/* Keep semantic header colors with darker shades */
+html.light-theme thead tr.text-gray-400 th.text-cyan-400 {
+  color: #0f766e !important;
+}
+
+html.light-theme thead tr.text-gray-400 th.text-amber-400 {
+  color: #b45309 !important;
+}
+
+html.light-theme thead tr.text-gray-400 th.text-purple-400 {
+  color: #7c3aed !important;
+}
+
+html.light-theme thead tr.text-gray-400 th.text-emerald-400 {
+  color: #047857 !important;
 }

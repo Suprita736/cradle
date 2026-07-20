@@ -9,6 +9,15 @@ function render() {
   body.innerHTML = '';
   logBox.innerHTML = '';
 
+  const stats = calculateStats(data.subjects);
+  const overallPctEl = document.getElementById('overallAttendance');
+  const totalCondEl = document.getElementById('totalConducted');
+  const belowTgtEl = document.getElementById('belowTargetCount');
+
+  if (overallPctEl) overallPctEl.textContent = `${stats.overallPercentage}%`;
+  if (totalCondEl) totalCondEl.textContent = stats.totalConducted;
+  if (belowTgtEl) belowTgtEl.textContent = stats.belowTargetCount;
+
   data.subjects.forEach((s, i) => {
     const targetPct = s.target || 80;
     const targetDec = targetPct / 100;
@@ -132,28 +141,124 @@ function render() {
   });
 
   // Render Log Items cleanly without innerHTML compilation loops
-  data.logs
-    .slice(-15)
-    .reverse()
-    .forEach((log) => {
-      const logDiv = document.createElement('div');
-      logDiv.className = 'history-item';
+  if (data.logs.length === 0) {
+    // Show empty state when there are no history entries
+    const emptyMsg = document.createElement('p');
+    emptyMsg.className = 'history-empty';
+    emptyMsg.textContent = 'No attendance history yet.';
+    logBox.appendChild(emptyMsg);
+  } else {
+    data.logs
+      .slice(-15)
+      .reverse()
+      .forEach((log) => {
+        const logDiv = document.createElement('div');
+        logDiv.className = 'history-item';
 
-      const spanSub = document.createElement('span');
-      const bSub = document.createElement('b');
-      bSub.textContent = log.sub; // Safe text injection
-      spanSub.appendChild(bSub);
+        const spanSub = document.createElement('span');
+        const bSub = document.createElement('b');
+        bSub.textContent = log.sub; // Safe text injection
+        spanSub.appendChild(bSub);
 
-      const spanType = document.createElement('span');
-      spanType.textContent = log.type;
+        const spanType = document.createElement('span');
+        spanType.textContent = log.type;
 
-      logDiv.appendChild(spanSub);
-      logDiv.appendChild(spanType);
-      logBox.appendChild(logDiv);
-    });
+        logDiv.appendChild(spanSub);
+        logDiv.appendChild(spanType);
+        logBox.appendChild(logDiv);
+      });
+  }
 
   localStorage.setItem('att_v5', JSON.stringify(data));
+
+  updateChart();
 }
+
+let attendanceChart = null;
+
+function updateChart() {
+  const ctx = document.getElementById('attendanceChart');
+  if (!ctx) return;
+  
+  let totalPresent = 0;
+  let totalAbsent = 0;
+  
+  data.subjects.forEach(s => {
+    totalPresent += s.p;
+    totalAbsent += s.a;
+  });
+  
+  if (totalPresent === 0 && totalAbsent === 0) {
+    if (attendanceChart) {
+      attendanceChart.destroy();
+      attendanceChart = null;
+    }
+    return;
+  }
+  
+  if (attendanceChart) {
+    attendanceChart.data.datasets[0].data = [totalPresent, totalAbsent];
+    attendanceChart.update();
+  } else {
+    attendanceChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['Present', 'Absent'],
+        datasets: [{
+          data: [totalPresent, totalAbsent],
+          backgroundColor: ['#16a34a', '#dc2626'],
+          hoverOffset: 4
+        }]
+      }
+    });
+  }
+}
+
+function exportCSV() {
+  if (!data.subjects || data.subjects.length === 0) {
+    alert("No data to export.");
+    return;
+  }
+  const csv = exportToCSV(data.subjects);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.setAttribute("download", "attendance_data.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function triggerImport() {
+  const fileInput = document.getElementById("csvFileInput");
+  if (fileInput) fileInput.click();
+}
+
+function importCSV(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const imported = parseCSV(text);
+    if (imported && imported.length > 0) {
+      if (confirm(`Are you sure you want to import ${imported.length} subjects? This will overwrite your current list.`)) {
+        data.subjects = imported;
+        data.logs.push({
+          sub: "All Subjects",
+          type: "Imported CSV",
+          date: new Date().toLocaleTimeString()
+        });
+        render();
+      }
+    } else {
+      alert("No valid subject data found in CSV.");
+    }
+  };
+  reader.readAsText(file);
+}
+
 
 function openModal() {
   document.getElementById('addModal').style.display = 'flex';
@@ -228,6 +333,14 @@ function removeSub(i) {
     data.subjects.splice(i, 1);
     render();
   }
+}
+
+// Clears all stored attendance history and refreshes the history list
+function clearHistory() {
+  if (!confirm('Are you sure you want to clear all history?')) return;
+
+  data.logs = [];
+  render();
 }
 
 render();

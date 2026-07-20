@@ -1,10 +1,10 @@
-# cradle ⟵⁠(⁠o⁠_⁠O⁠)
+# Cradle ⟵⁠(⁠o⁠_⁠O⁠)
 
 A personal collection of small ideas, experiments, and geeky projects I'm exploring and building.
 
 ## What this repository contains
 
-Projectz is a repository for my small ideas, experiments and lightweight prototypes. It contains runnable demos, maybe eventually some short technical notes and utility scripts intended for rapid iteration and learning.
+Cradle is a repository for my small ideas, experiments and lightweight prototypes. It contains runnable demos, maybe eventually some short technical notes and utility scripts intended for rapid iteration and learning.
 
 ## Each project folder would include:
 - a short `README.md` describing the goal and how to run or test it,  
@@ -55,3 +55,31 @@ http://localhost:8000
 ```
 4. For Individual projects
    - Open their `index.html` directly on browser 
+
+## 🗂️ Architecture Documentation
+
+Every project in Cradle includes an `ARCHITECTURE.md` file that explains its folder structure, components, data flow, and design decisions. If you are adding a new project, use the standardized template at the repository root:
+
+```text
+ARCHITECTURE_TEMPLATE.md
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md#architecture-documentation) for full instructions on how to fill it in.
+
+## 🔧 Troubleshooting
+
+Running into issues? Check the [Troubleshooting Guide](TROUBLESHOOT.md) for solutions to common setup, development, and Git problems before opening a new issue.
+
+## 🤝 Contributing
+
+Contributions are welcome! Whether you're fixing bugs, improving documentation, or adding new ideas and experiments, your help is greatly appreciated.
+
+Before getting started, please read our [Contributing Guide](CONTRIBUTING.md) for information about the development workflow, coding standards, and pull request process.
+
+## 📄 License
+
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+
+
+## Very Important Note
+Don't forget to leave a star behind for the repo if you're visiting this
